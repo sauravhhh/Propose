@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#ff4d6d">
+<title>Will You Say Yes?</title>
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    min-height: 100vh;
+    min-height: 100dvh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: linear-gradient(160deg, #ff9a9e 0%, #fecfef 45%, #fbc2eb 70%, #a18cd1 100%);
+    color: #3d2c35;
+    padding: 20px;
+  }
+
+  /* floating hearts background */
+  .hearts { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+  .hearts span {
+    position: absolute; bottom: -40px; font-size: 22px; opacity: .55;
+    animation: floatUp linear infinite;
+  }
+  @keyframes floatUp {
+    0% { transform: translateY(0) rotate(0deg); opacity: 0; }
+    10% { opacity: .6; }
+    90% { opacity: .5; }
+    100% { transform: translateY(-105vh) rotate(40deg); opacity: 0; }
+  }
+
+  .card {
+    position: relative; z-index: 1;
+    width: 100%; max-width: 420px;
+    background: rgba(255, 255, 255, .88);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border-radius: 28px;
+    box-shadow: 0 20px 50px rgba(190, 40, 90, .30);
+    padding: 34px 24px 30px;
+    text-align: center;
+    transition: transform .35s ease, opacity .35s ease;
+  }
+  .card.pop { animation: pop .35s ease; }
+  @keyframes pop { 0% { transform: scale(.92); opacity: .4; } 100% { transform: scale(1); opacity: 1; } }
+
+  .face { font-size: 84px; line-height: 1; margin-bottom: 10px; display: block; animation: bob 2.2s ease-in-out infinite; }
+  @keyframes bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+  h1 { font-size: 27px; line-height: 1.25; font-weight: 800; color: #c9184a; margin-bottom: 10px; }
+  .sub { font-size: 18px; line-height: 1.45; color: #6d4a57; min-height: 26px; }
+
+  .btn-row {
+    position: relative;
+    margin-top: 30px;
+    min-height: 200px;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 18px;
+  }
+  button {
+    font-family: inherit;
+    border: none;
+    cursor: pointer;
+    font-weight: 800;
+    border-radius: 999px;
+    transition: transform .18s ease, box-shadow .18s ease, left .18s ease, top .18s ease;
+  }
+  button:active { transform: scale(.94); }
+  #yesBtn {
+    background: linear-gradient(135deg, #ff4d6d, #ff758f);
+    color: #fff;
+    font-size: 22px;
+    padding: 16px 44px;
+    box-shadow: 0 10px 24px rgba(255, 77, 109, .45);
+  }
+  #noBtn {
+    background: #fff;
+    color: #c9184a;
+    font-size: 20px;
+    padding: 16px 36px;
+    border: 2px solid #ffb3c1;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .12);
+    position: relative;
+    z-index: 2;
+  }
+  #noBtn.dodging { position: absolute; margin: 0; }
+
+  .hint { margin-top: 18px; font-size: 13px; color: #a97a88; }
+
+  /* celebration */
+  .celebrate { display: none; }
+  .celebrate.show { display: block; }
+  .big-heart { font-size: 96px; line-height: 1; animation: heartbeat 1s ease-in-out infinite; }
+  @keyframes heartbeat {
+    0%, 100% { transform: scale(1); }
+    25% { transform: scale(1.18); }
+    45% { transform: scale(1); }
+    60% { transform: scale(1.14); }
+  }
+  .confetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+  .confetti span {
+    position: absolute; top: -30px; font-size: 20px;
+    animation: fall linear infinite;
+  }
+  @keyframes fall { to { transform: translateY(105vh) rotate(360deg); } }
+  .again {
+    margin-top: 26px;
+    background: #fff; color: #c9184a; font-size: 16px;
+    padding: 13px 30px; border: 2px solid #ffb3c1;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, .12);
+  }
+</style>
+</head>
+<body>
+  <div class="hearts" id="hearts"></div>
+  <div class="confetti" id="confetti" style="display:none"></div>
+
+  <div class="card" id="card">
+    <!-- game screen -->
+    <div id="game">
+      <span class="face" id="face">🥰</span>
+      <h1 id="question">DO you love me? 🤗</h1>
+      <p class="sub" id="sub"></p>
+      <div class="btn-row" id="btnRow">
+        <button id="yesBtn" type="button">Yes 💕</button>
+        <button id="noBtn" type="button">No 🙈</button>
+      </div>
+      <p class="hint" id="hint">Choose wisely… 😌</p>
+    </div>
+
+    <!-- celebration screen -->
+    <div class="celebrate" id="celebrate">
+      <div class="big-heart">💖</div>
+      <h1 style="margin-top:14px">Hehehehe, I knew it!<br>Love you a lot 😘</h1>
+      <p class="sub">You just made my day 💕</p>
+      <button class="again" id="againBtn" type="button">Play again ↺</button>
+    </div>
+  </div>
+
+<script>
+/* Original joke flow, word for word (author name removed):
+   Q: "DO you love me? 🤗"
+   No 1: "Please think again! 🙄" / "itni jaldi nahi matt bolo😥"
+   No 2: "Ek aur baar Soch lo! 😣" / "kyu aisa kar rahi ho 😣"
+   No 3: "Baby Man jao na! Kitna bhav khaogi 😭" / "bhut glt baat hai yaar😭"
+   Yes: "Hehehehe, I knew it! Love you a lot 😘" */
+var STAGES = [
+  { face: '🥰', q: 'DO you love me? 🤗', sub: '', hint: 'Choose wisely… 😌' },
+  { face: '🙄', q: 'Please think again! 🙄', sub: 'itni jaldi nahi matt bolo😥', hint: 'Try again… 😅' },
+  { face: '😣', q: 'Ek aur baar Soch lo! 😣', sub: 'kyu aisa kar rahi ho 😣', hint: 'Last chance… 👀' },
+  { face: '😭', q: 'Baby Man jao na! Kitna bhav khaogi 😭', sub: 'bhut glt baat hai yaar😭', hint: 'The No button is scared now…' }
+];
+var stage = 0;
+
+var card = document.getElementById('card');
+var faceEl = document.getElementById('face');
+var qEl = document.getElementById('question');
+var subEl = document.getElementById('sub');
+var hintEl = document.getElementById('hint');
+var yesBtn = document.getElementById('yesBtn');
+var noBtn = document.getElementById('noBtn');
+var btnRow = document.getElementById('btnRow');
+var gameEl = document.getElementById('game');
+var celEl = document.getElementById('celebrate');
+
+function render() {
+  var s = STAGES[stage];
+  faceEl.textContent = s.face;
+  qEl.textContent = s.q;
+  subEl.textContent = s.sub;
+  hintEl.textContent = s.hint;
+  card.classList.remove('pop');
+  void card.offsetWidth; /* restart animation */
+  card.classList.add('pop');
+  /* Yes grows a little every time No is pressed */
+  yesBtn.style.transform = 'scale(' + (1 + stage * 0.12) + ')';
+}
+
+function dodgeNo() {
+  /* Advance the joke first (Yes grows), then No escapes to a random spot
+     inside the button area that never covers Yes */
+  if (stage < STAGES.length - 1) { stage++; render(); }
+  var row = btnRow.getBoundingClientRect();
+  var yesR = yesBtn.getBoundingClientRect();
+  var bw = noBtn.offsetWidth, bh = noBtn.offsetHeight;
+  var maxX = Math.max(0, row.width - bw);
+  var maxY = Math.max(0, row.height - bh);
+  noBtn.classList.add('dodging');
+  var x = 0, y = 0, tries = 0;
+  do {
+    x = Math.floor(Math.random() * maxX);
+    y = Math.floor(Math.random() * maxY);
+    tries++;
+  } while (tries < 20 && x < yesR.right - row.left + 8 && x + bw > yesR.left - row.left - 8
+           && y < yesR.bottom - row.top + 8 && y + bh > yesR.top - row.top - 8);
+  noBtn.style.left = x + 'px';
+  noBtn.style.top = y + 'px';
+}
+
+/* Move before the tap can land, so No can never actually be pressed */
+noBtn.addEventListener('pointerdown', function (e) { e.preventDefault(); dodgeNo(); });
+noBtn.addEventListener('mouseenter', function () { dodgeNo(); });
+noBtn.addEventListener('click', function (e) { e.preventDefault(); });
+
+yesBtn.addEventListener('click', function () {
+  gameEl.style.display = 'none';
+  celEl.classList.add('show');
+  document.getElementById('confetti').style.display = 'block';
+  burstConfetti();
+});
+
+document.getElementById('againBtn').addEventListener('click', function () {
+  stage = 0;
+  noBtn.classList.remove('dodging');
+  noBtn.style.left = ''; noBtn.style.top = '';
+  yesBtn.style.transform = '';
+  celEl.classList.remove('show');
+  document.getElementById('confetti').style.display = 'none';
+  gameEl.style.display = '';
+  render();
+});
+
+/* floating hearts background */
+(function () {
+  var box = document.getElementById('hearts');
+  var icons = ['💕', '💗', '💓', '💖', '❤️'];
+  for (var i = 0; i < 16; i++) {
+    var s = document.createElement('span');
+    s.textContent = icons[i % icons.length];
+    s.style.left = (Math.random() * 100) + '%';
+    s.style.fontSize = (14 + Math.random() * 22) + 'px';
+    s.style.animationDuration = (9 + Math.random() * 10) + 's';
+    s.style.animationDelay = (-Math.random() * 18) + 's';
+    box.appendChild(s);
+  }
+})();
+
+function burstConfetti() {
+  var box = document.getElementById('confetti');
+  box.innerHTML = '';
+  var icons = ['💖', '💕', '🎉', '✨', '💗', '🎊'];
+  for (var i = 0; i < 40; i++) {
+    var s = document.createElement('span');
+    s.textContent = icons[i % icons.length];
+    s.style.left = (Math.random() * 100) + '%';
+    s.style.fontSize = (14 + Math.random() * 20) + 'px';
+    s.style.animationDuration = (2.5 + Math.random() * 2.5) + 's';
+    s.style.animationDelay = (Math.random() * 1.5) + 's';
+    box.appendChild(s);
+  }
+}
+
+/* PWA service worker */
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function () {
+    navigator.serviceWorker.register('sw.js').catch(function () {});
+  });
+}
+</script>
+</body>
+</html>
